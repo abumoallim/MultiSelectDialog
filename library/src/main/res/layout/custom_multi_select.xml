@@ -25,7 +25,8 @@
         android:iconifiedByDefault="true"
         android:queryHint="Search" />
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/select_all_container"
         android:visibility="gone"
         android:layout_width="match_parent"

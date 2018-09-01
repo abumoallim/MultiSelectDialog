@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatDialogFragment;
+import android.support.v7.widget.AppCompatCheckBox;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.SearchView;
 import android.util.TypedValue;
@@ -11,6 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +44,9 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
     private int maxSelectionLimit = 0;
     private String maxSelectionMessage = null;
 
+    private String selectAllItemText = null;
+    private boolean select_selectAllItemOnCreate = false;
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -69,14 +75,47 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
 
         settingValues();
 
+        if(this.select_selectAllItemOnCreate) {
+            previouslySelectedIdsList.clear();
+
+            for(int i = 0; i < mainListOfAdapter.size(); i++) {
+                previouslySelectedIdsList.add(mainListOfAdapter.get(i).getId());
+            }
+        }
+
+        final AppCompatCheckBox selectAllCheckBox = (AppCompatCheckBox) dialog.findViewById(R.id.select_all_checkbox);
+        LinearLayout selectAllContainer = (LinearLayout) dialog.findViewById(R.id.select_all_container);
+
         mainListOfAdapter = setCheckedIDS(mainListOfAdapter, previouslySelectedIdsList);
-        mutliSelectAdapter = new MutliSelectAdapter(mainListOfAdapter, getContext());
+
+        mutliSelectAdapter = new MutliSelectAdapter(mainListOfAdapter, getContext(), selectAllCheckBox);
         mrecyclerView.setAdapter(mutliSelectAdapter);
+
+        if(this.selectAllItemText != null) {
+            dialog.findViewById(R.id.select_all_container).setVisibility(View.VISIBLE);
+            ((TextView)dialog.findViewById(R.id.select_all_text)).setText(this.selectAllItemText);
+
+            selectAllContainer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    selectAllCheckBox.setChecked(!selectAllCheckBox.isChecked());
+                }
+            });
+            selectAllCheckBox.setClickable(true);
+            selectAllCheckBox.setChecked(this.select_selectAllItemOnCreate);
+            selectAllCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean selected) {
+                    if(selected) {
+                        mutliSelectAdapter.selectAll();
+                    }
+                }
+            });
+        }
 
         searchView.setOnQueryTextListener(this);
         searchView.onActionViewExpanded();
         searchView.clearFocus();
-
 
         return dialog;
     }
@@ -134,6 +173,17 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
 		this.minSelectionMessage = message;
 		return this;
 	}
+
+	public MultiSelectDialog enableSelectAllItem(String itemText, boolean selectOnCreate) {
+        if(itemText == null || itemText.length() == 0) {
+            throw new IllegalArgumentException("Argument itemText cannot be null or empty");
+        }
+
+        this.selectAllItemText = itemText;
+        this.select_selectAllItemOnCreate = selectOnCreate;
+
+        return this;
+    }
 
     public MultiSelectDialog onSubmit(@NonNull SubmitCallbackListener callback) {
         this.submitCallbackListener = callback;

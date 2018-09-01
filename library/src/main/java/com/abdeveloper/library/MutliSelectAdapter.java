@@ -22,10 +22,12 @@ class MutliSelectAdapter extends RecyclerView.Adapter<MutliSelectAdapter.MultiSe
     private ArrayList<MultiSelectModel> mDataSet = new ArrayList<>();
     private String mSearchQuery = "";
     private Context mContext;
+    private AppCompatCheckBox mSelectAllCheckBox;
 
-    MutliSelectAdapter(ArrayList<MultiSelectModel> dataSet, Context context) {
+    MutliSelectAdapter(ArrayList<MultiSelectModel> dataSet, Context context, AppCompatCheckBox selectAllCheckBox) {
         this.mDataSet = dataSet;
         this.mContext = context;
+        this.mSelectAllCheckBox = selectAllCheckBox;
     }
 
     @Override
@@ -39,22 +41,21 @@ class MutliSelectAdapter extends RecyclerView.Adapter<MutliSelectAdapter.MultiSe
 
         if (!mSearchQuery.equals("") && mSearchQuery.length() > 1) {
             setHighlightedText(position, holder.dialog_name_item);
-        } else {
+        }
+        else {
             holder.dialog_name_item.setText(mDataSet.get(position).getName());
         }
 
         if (mDataSet.get(position).getSelected()) {
-
             if (!MultiSelectDialog.selectedIdsForCallback.contains(mDataSet.get(position).getId())) {
                 MultiSelectDialog.selectedIdsForCallback.add(mDataSet.get(position).getId());
             }
         }
-
-        if (checkForSelection(mDataSet.get(position).getId())) {
-            holder.dialog_item_checkbox.setChecked(true);
-        } else {
-            holder.dialog_item_checkbox.setChecked(false);
+        else if(mSelectAllCheckBox != null) {
+            mSelectAllCheckBox.setChecked(false);
         }
+
+        holder.dialog_item_checkbox.setChecked(checkForSelection(mDataSet.get(position).getId()));
 
         /*holder.dialog_item_checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,6 +118,13 @@ class MutliSelectAdapter extends RecyclerView.Adapter<MutliSelectAdapter.MultiSe
         return false;
     }
 
+    public void selectAll() {
+        for(int i = 0; i < mDataSet.size(); i++) {
+            mDataSet.get(i).setSelected(true);
+        }
+
+        this.notifyDataSetChanged();
+    }
 
     /*//get selected name string seperated by coma
     public String getDataString() {
